@@ -207,7 +207,7 @@ func main() {
 	// 	log.Fatal(err)
 	// }
 	finder := find.NewFinder(c, true)
-	datacenter, err :=  finder.Datacenter(ctx, "Shenzhen")
+	datacenter, err := finder.Datacenter(ctx, "Shenzhen")
 	finder.SetDatacenter(datacenter)
 	vm, err := finder.VirtualMachine(context.Background(), "yanbo_test_1")
 	//vm, err := si.FindChild(ctx, vmsFolders, "yanbo/yanbo_dev")
@@ -267,12 +267,11 @@ func main() {
 	//	jsonPutLine(ds)
 	//}
 
-	//var n mo.Network
-	//for _, nref := range o.Network {
-	//	property.DefaultCollector(c).RetrieveOne(ctx, nref.Reference(), nil, &n)
-	//	jsonPutLine(n)
-	//}
-
+	var n mo.Network
+	for _, nref := range o.Network {
+		property.DefaultCollector(c).RetrieveOne(ctx, nref.Reference(), nil, &n)
+		jsonPutLine(n)
+	}
 
 	// dsRefs, err := dsFolders.Children(ctx)
 	// if err != nil {
@@ -318,29 +317,29 @@ func main() {
 
 	// log.Println(len(tempVm.Snapshot.RootSnapshotList))
 
-	//hs, err := mingweiVm.HostSystem(ctx)
-	//if err != nil {
-	//	log.Fatal(err)
-	//}
-	//netsys, err := hs.ConfigManager().NetworkSystem(ctx)
-	//if err != nil {
-	//	log.Fatal(err)
-	//}
-	//
-	//var mns mo.HostNetworkSystem
-	//
-	//property.DefaultCollector(c).RetrieveOne(ctx, netsys.Reference(), nil, &mns)
-	//jsonPutLine(mns)
+	hs, err := mingweiVm.HostSystem(ctx)
+	if err != nil {
+		log.Fatal(err)
+	}
+	netsys, err := hs.ConfigManager().NetworkSystem(ctx)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	var mns mo.HostNetworkSystem
+
+	property.DefaultCollector(c).RetrieveOne(ctx, netsys.Reference(), nil, &mns)
+	jsonPutLine(mns)
 
 	rootSnapShotRef := tempVm.RootSnapshot[0].Reference()
 	changeAreaReq := &types.QueryChangedDiskAreas{
-		This: mingweiVm.Reference(),
-		Snapshot    : &rootSnapShotRef,
-		DeviceKey   : 2000,
-		StartOffset : 0,
-		ChangeId: "*",
+		This:        mingweiVm.Reference(),
+		Snapshot:    &rootSnapShotRef,
+		DeviceKey:   2000,
+		StartOffset: 0,
+		ChangeId:    "*",
 	}
-	res, err := methods.QueryChangedDiskAreas(ctx,c, changeAreaReq)
+	res, err := methods.QueryChangedDiskAreas(ctx, c, changeAreaReq)
 	if err != nil {
 		log.Fatal(err)
 	}

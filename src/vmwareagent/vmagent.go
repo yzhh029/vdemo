@@ -19,30 +19,30 @@ const CONFIG_USERNAME = "vsphere.local\\administrator"
 const CONFIG_PASSWORD = "!QAZ2wsx"
 const CONFIG_SSLFLAG = true
 
-type VMwareDisk struct{
-	Uuid string
-	Name string
-	Path string
-	ZbsVolumeId string
-	Duplicated bool
+type VMwareDisk struct {
+	Uuid         string
+	Name         string
+	Path         string
+	ZbsVolumeId  string
+	Duplicated   bool
 	OutOfProtect bool
 }
-type VMwareNet struct{
-	Uuid string
-	Name string
-	Type string
-	VlanId uint32
-	vsdUuid string
-	gateway string
-	subnetmask string
-	host []*VMwareVdsHost
+type VMwareNet struct {
+	Uuid          string
+	Name          string
+	Type          string
+	VlanId        uint32
+	VsdUuid       string
+	Gateway       string
+	Subnetmask    string
+	Host          []*VMwareVdsHost
 	OriginalHosts map[string]*VMwareVdsHost
 }
 type VMwareVdsHost struct {
-	DataIp string
-	Host string
-	HostUuid string
-	ManagementIp string
+	DataIp         string
+	Host           string
+	HostUuid       string
+	ManagementIp   string
 	NicsAssociated []string
 }
 
@@ -125,15 +125,18 @@ func GetVmwareVmDiskInfo(vm mo.VirtualMachine) map[int32]*VMwareDisk {
 	return disks
 }
 
-func GetVmwareVmNetworkInfo(vm mo.VirtualMachine) map[int32]*VMwareNet{
+func GetVmwareVmNetworkInfo(vm mo.VirtualMachine) map[int32]*VMwareNet {
 	vnets := make(map[int32]*VMwareNet)
 	for _, device := range vm.Config.Hardware.Device {
 		key := device.GetVirtualDevice().Key
 		if key >= 4000 && key < 5000 {
-			netDevice := device.GetVirtualDevice()
 			var net VMwareNet
+			netDevice := device.(*types.VirtualEthernetCard)
 			net.Name = netDevice.DeviceInfo.GetDescription().Label
-
+			//backing := netDevice.Backing.(*types.VirtualEthernetCardNetworkBackingInfo)
+			net.VlanId = uint32(key)
+			net.Uuid = string(key)
+			vnets[key] = &net
 		}
 	}
 	return vnets
@@ -163,4 +166,18 @@ func GetDiskChangeIdFromSnapshot(
 	default:
 		return "*"
 	}
+}
+
+func GetHostSystemNetWork(ctx context.Context, c *vim25.Client, vm *object.VirtualMachine) mo.HostNetworkSystem {
+	hs, err := vm.HostSystem(ctx)
+	if err != nil {
+		log.Fatal(err)
+	}
+	netsys, err := hs.ConfigManager().NetworkSystem(ctx)
+	if err != nil {
+		log.Fatal(err)
+	}
+	var mns mo.HostNetworkSystem
+	property.DefaultCollector(c).RetrieveOne(ctx, netsys.Reference(), nil, &mns)
+	return mns
 }
