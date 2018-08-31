@@ -125,9 +125,10 @@ func GetVmwareVmDiskInfo(vm mo.VirtualMachine) map[int32]*VMwareDisk {
 	return disks
 }
 
-func GetVmwareVmNetworkInfo(vm mo.VirtualMachine) map[int32]*VMwareNet {
+func GetVmwareVmNetworkInfo(ctx context.Context, c *vim25.Client, vm *object.VirtualMachine) map[int32]*VMwareNet {
+	vmInfo := GetVMInfo(ctx, vm)
 	vnets := make(map[int32]*VMwareNet)
-	for _, device := range vm.Config.Hardware.Device {
+	for _, device := range vmInfo.Config.Hardware.Device {
 		key := device.GetVirtualDevice().Key
 		if key >= 4000 && key < 5000 {
 			var net VMwareNet
@@ -136,6 +137,26 @@ func GetVmwareVmNetworkInfo(vm mo.VirtualMachine) map[int32]*VMwareNet {
 			//backing := netDevice.Backing.(*types.VirtualEthernetCardNetworkBackingInfo)
 			net.VlanId = uint32(key)
 			net.Uuid = string(key)
+			hostnetwork := GetHostSystemNetWork(ctx, c, vm)
+			vss := hostnetwork.NetworkInfo.Vswitch
+			var vswitch types.HostVirtualSwitch
+			for _, vs := range vss {
+				pgs := vs.Portgroup
+				for _, pg := range pgs {
+					if pg == "key-vim.host.PortGroup-"+net.Name {
+						vswitch = vs
+						break
+					}
+				}
+			}
+			net.Gateway = hostnetwork.IpRouteConfig.(*types.HostIpRouteConfig).DefaultGateway
+			net.VsdUuid = vswitch.Key
+			for _, pg := range hostnetwork.NetworkInfo.Portgroup {
+				if pg.Key == "key-vim.host.PortGroup-"+net.Name {
+					net.VlanId = uint32(pg.Spec.VlanId)
+					break
+				}
+			}
 			vnets[key] = &net
 		}
 	}
