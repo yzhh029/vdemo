@@ -16,10 +16,10 @@ func main() {
 	c := vmwareagent.NewAuthenticatedClient(ctx)
 
 	finder := find.NewFinder(c, true)
-	datacenter, err := finder.Datacenter(ctx, "Shenzhen")
+	datacenter, err := finder.Datacenter(ctx, "BJ-IDC-Dogfood")
 	utils.CheckError(err)
 	finder.SetDatacenter(datacenter)
-	mingweiVm, err := finder.VirtualMachine(context.Background(), "mingwei_1")
+	mingweiVm, err := finder.VirtualMachine(context.Background(), "3.5.x_ha_autotest1")
 	utils.CheckError(err)
 	if mingweiVm == nil {
 		log.Fatal("search vm error")

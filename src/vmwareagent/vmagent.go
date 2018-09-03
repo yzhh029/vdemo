@@ -2,6 +2,7 @@ package vmwareagent
 
 import (
 	"context"
+	"fmt"
 	"github.com/vmware/govmomi/object"
 	"github.com/vmware/govmomi/property"
 	"github.com/vmware/govmomi/vim25"
@@ -10,11 +11,13 @@ import (
 	"github.com/vmware/govmomi/vim25/soap"
 	"github.com/vmware/govmomi/vim25/types"
 	"log"
+	"net"
 	"net/url"
+	"strings"
 	"vdemo/src/utils"
 )
 
-const CONFIG_URL = "https://192.168.70.255"
+const CONFIG_URL = "https://192.168.30.255"
 const CONFIG_USERNAME = "vsphere.local\\administrator"
 const CONFIG_PASSWORD = "!QAZ2wsx"
 const CONFIG_SSLFLAG = true
@@ -26,6 +29,13 @@ type VMwareDisk struct {
 	ZbsVolumeId  string
 	Duplicated   bool
 	OutOfProtect bool
+}
+
+type VMwareNic struct {
+	MacAddress           string
+	Ovs                  string
+	VlanUuid             string
+	Vlans                []string
 }
 
 type VMwareNet struct {
@@ -40,9 +50,9 @@ type VMwareNet struct {
 }
 
 type VMwareSwitch struct {
-	UUID      string `json:"uuid"`
-	Name      string `json:"name"`
-	OvsbrName string `json:"ovsbr_name"`
+	UUID      string
+	Name      string
+	OvsbrName string
 }
 
 // connect vsphere with an auth client
@@ -124,41 +134,62 @@ func GetVmwareVmDiskInfo(vm mo.VirtualMachine) map[int32]*VMwareDisk {
 	return disks
 }
 
-func GetVmwareVmNetworkInfo(ctx context.Context, c *vim25.Client, vm *object.VirtualMachine) map[int32]*VMwareNet {
+func GetVmwareVmNetworkInfo(ctx context.Context, c *vim25.Client, vm *object.VirtualMachine) (map[int32]*VMwareNic, map[int32]*VMwareNet, map[int32]*VMwareSwitch) {
 	vmInfo := GetVMInfo(ctx, vm)
+	vnics := make(map[int32]*VMwareNic)
 	vnets := make(map[int32]*VMwareNet)
+	vdss := make(map[int32]*VMwareSwitch)
 	for _, device := range vmInfo.Config.Hardware.Device {
 		key := device.GetVirtualDevice().Key
 		if key >= 4000 && key < 5000 {
-			var net VMwareNet
+			var vnic VMwareNic
+			var vnet VMwareNet
+			var vds VMwareSwitch
+
 			netDevice := device.(*types.VirtualEthernetCard)
-			net.Name = netDevice.DeviceInfo.GetDescription().Label
-			//backing := netDevice.Backing.(*types.VirtualEthernetCardNetworkBackingInfo)
-			net.UUID = string(key)
+
+			vnic.MacAddress = netDevice.MacAddress
+			vnet.Name = netDevice.DeviceInfo.GetDescription().Label
+			vnet.UUID = string(key)
 			hostnetwork := GetHostSystemNetWork(ctx, c, vm)
-			vss := hostnetwork.NetworkInfo.Vswitch
 			var vswitch types.HostVirtualSwitch
-			for _, vs := range vss {
-				pgs := vs.Portgroup
-				for _, pg := range pgs {
-					if pg == "key-vim.host.PortGroup-"+net.Name {
-						vswitch = vs
-						break
-					}
-				}
-			}
-			net.Gateway = hostnetwork.IpRouteConfig.(*types.HostIpRouteConfig).DefaultGateway
-			net.VdsUUID = vswitch.Key
+			var vswitchName string
 			for _, pg := range hostnetwork.NetworkInfo.Portgroup {
-				if pg.Key == "key-vim.host.PortGroup-"+net.Name {
-					net.VlanID = uint32(pg.Spec.VlanId)
+				if pg.Key == "key-vim.host.PortGroup-"+vnet.Name {
+					vnet.VlanID = uint32(pg.Spec.VlanId)
+					vnic.VlanUuid = string(pg.Spec.VlanId)
+					vswitchName = pg.Vswitch
 					break
 				}
 			}
-			vnets[key] = &net
+			for _, vs := range hostnetwork.NetworkInfo.Vswitch {
+				if vs.Key == vswitchName {
+					vswitch = vs
+					vds.UUID = vs.Key
+					vds.Name = vs.Name
+					break
+				}
+			}
+			vnet.Gateway = hostnetwork.IpRouteConfig.(*types.HostIpRouteConfig).DefaultGateway
+			vnet.VdsUUID = vswitch.Key
+
+			nets := vmInfo.Guest.Net
+			for _, net := range nets {
+				if net.Network == vnet.Name {
+					if isIPv6(net.IpAddress[0]){
+						vnet.Subnetmask = getIpv6SubnetMask(int(net.IpConfig.IpAddress[0].PrefixLength))
+					} else {
+						vnet.Subnetmask = getIpv4SubnetMask(int(net.IpConfig.IpAddress[0].PrefixLength))
+					}
+				}
+			}
+
+			vnics[key] = &vnic
+			vnets[key] = &vnet
+			vdss[key] = &vds
 		}
 	}
-	return vnets
+	return vnics, vnets, vdss
 }
 
 func GetDiskChangeIdFromSnapshot(
@@ -234,4 +265,50 @@ func GetSnapshotIncrementData(ctx context.Context, c *vim25.Client, vm *object.V
 	res, err := methods.QueryChangedDiskAreas(ctx, c, changeAreaReq)
 	utils.CheckError(err)
 	return res.Returnval.ChangedArea
+}
+
+func isIPv6(ip string) bool {
+	if strings.Contains(ip, ":") {
+		return true
+	} else {
+		return false
+	}
+}
+
+func getSubnetMask(ones int, ipv6 bool) string {
+	if ipv6 {
+		return getIpv6SubnetMask(ones)
+	} else {
+		return getIpv4SubnetMask(ones)
+	}
+}
+
+
+func getIpv6SubnetMask(ones int) string {
+	m := net.CIDRMask(ones, 128)
+	str := m.String()
+	var subnetmask string
+	ipv6Split(str, &subnetmask)
+	return subnetmask
+}
+
+func getIpv4SubnetMask(ones int) string {
+	m := net.CIDRMask(ones, 32)
+	subnetMask := net.IPv4(m[0], m[1], m[2], m[3])
+	return subnetMask.String()
+}
+
+func ipv6Split(key string,temp *string){
+	if len(key) <= 4 {
+		*temp = *temp+key
+	}
+	for i:=0;i<len(key);i++{
+		if (i+1)%4==0 && i != len(key)-1{
+			*temp = *temp+key[:i+1]+":"
+			fmt.Println(len(*temp)-1)
+			key = key[i+1:]
+			ipv6Split(key,temp)
+			break
+		}
+	}
 }
