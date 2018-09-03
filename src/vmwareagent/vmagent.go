@@ -27,23 +27,22 @@ type VMwareDisk struct {
 	Duplicated   bool
 	OutOfProtect bool
 }
+
 type VMwareNet struct {
-	Uuid          string
-	Name          string
-	Type          string
-	VlanId        uint32
-	VsdUuid       string
-	Gateway       string
-	Subnetmask    string
-	Host          []*VMwareVdsHost
-	OriginalHosts map[string]*VMwareVdsHost
+	InternalVlanID interface{}
+	UUID           string
+	Name           string
+	Type           uint32
+	VlanID         uint32
+	VdsUUID        string
+	Gateway        string
+	Subnetmask     string
 }
-type VMwareVdsHost struct {
-	DataIp         string
-	Host           string
-	HostUuid       string
-	ManagementIp   string
-	NicsAssociated []string
+
+type VMwareSwitch struct {
+	UUID      string `json:"uuid"`
+	Name      string `json:"name"`
+	OvsbrName string `json:"ovsbr_name"`
 }
 
 // connect vsphere with an auth client
@@ -135,8 +134,7 @@ func GetVmwareVmNetworkInfo(ctx context.Context, c *vim25.Client, vm *object.Vir
 			netDevice := device.(*types.VirtualEthernetCard)
 			net.Name = netDevice.DeviceInfo.GetDescription().Label
 			//backing := netDevice.Backing.(*types.VirtualEthernetCardNetworkBackingInfo)
-			net.VlanId = uint32(key)
-			net.Uuid = string(key)
+			net.UUID = string(key)
 			hostnetwork := GetHostSystemNetWork(ctx, c, vm)
 			vss := hostnetwork.NetworkInfo.Vswitch
 			var vswitch types.HostVirtualSwitch
@@ -150,10 +148,10 @@ func GetVmwareVmNetworkInfo(ctx context.Context, c *vim25.Client, vm *object.Vir
 				}
 			}
 			net.Gateway = hostnetwork.IpRouteConfig.(*types.HostIpRouteConfig).DefaultGateway
-			net.VsdUuid = vswitch.Key
+			net.VdsUUID = vswitch.Key
 			for _, pg := range hostnetwork.NetworkInfo.Portgroup {
 				if pg.Key == "key-vim.host.PortGroup-"+net.Name {
-					net.VlanId = uint32(pg.Spec.VlanId)
+					net.VlanID = uint32(pg.Spec.VlanId)
 					break
 				}
 			}
@@ -201,4 +199,39 @@ func GetHostSystemNetWork(ctx context.Context, c *vim25.Client, vm *object.Virtu
 	var mns mo.HostNetworkSystem
 	property.DefaultCollector(c).RetrieveOne(ctx, netsys.Reference(), nil, &mns)
 	return mns
+}
+
+func CreateSnapshot(ctx context.Context, vm *object.VirtualMachine, snapshotName string, snapshotDesc string) error {
+	result, err := vm.CreateSnapshot(ctx, snapshotName, snapshotDesc, false, false)
+	utils.CheckError(err)
+	return result.Wait(ctx)
+}
+
+func DeleteSnapshot(ctx context.Context, vm *object.VirtualMachine, snapshotName string) error {
+	consolidDate := true
+	result, err := vm.RemoveSnapshot(ctx, snapshotName, true, &consolidDate)
+	utils.CheckError(err)
+	return result.Wait(ctx)
+}
+
+func GetSnapshotByName(ctx context.Context, c *vim25.Client, vm *object.VirtualMachine, snapshotName string) mo.VirtualMachineSnapshot {
+	snapshotRef, err := vm.FindSnapshot(ctx, snapshotName)
+	utils.CheckError(err)
+	var snapshot mo.VirtualMachineSnapshot
+	err = property.DefaultCollector(c).RetrieveOne(ctx, snapshotRef.Reference(), nil, &snapshot)
+	utils.CheckError(err)
+	return snapshot
+}
+
+func GetSnapshotIncrementData(ctx context.Context, c *vim25.Client, vm *object.VirtualMachine, snapshotRef *types.ManagedObjectReference, changeId string, deviceKey int32) []types.DiskChangeExtent {
+	changeAreaReq := &types.QueryChangedDiskAreas{
+		This:        vm.Reference(),
+		Snapshot:    snapshotRef,
+		DeviceKey:   deviceKey,
+		StartOffset: 0,
+		ChangeId:    changeId,
+	}
+	res, err := methods.QueryChangedDiskAreas(ctx, c, changeAreaReq)
+	utils.CheckError(err)
+	return res.Returnval.ChangedArea
 }

@@ -43,26 +43,4 @@ func main() {
 
 	utils.JsonPutLine(mns)
 
-	//diskInfo := vmwareagent.GetVmwareVmDiskInfo(VmInfo)
-	//for _, disk := range diskInfo {
-	//	log.Println("------------------")
-	//	log.Println("disk.uuid=", disk.Uuid)
-	//	log.Println("disk.name=", disk.Name)
-	//	log.Println("disk.path=", disk.Path)
-	//}
-
-	//rootSnapShotRef := VmInfo.RootSnapshot[0].Reference()
-	//changeAreaReq := &types.QueryChangedDiskAreas{
-	//	This: mingweiVm.Reference(),
-	//	Snapshot    : &rootSnapShotRef,
-	//	DeviceKey   : 2000,
-	//	StartOffset : 0,
-	//	ChangeId: "*",
-	//}
-	//res, err := methods.QueryChangedDiskAreas(ctx,c, changeAreaReq)
-	//if err != nil {
-	//	log.Fatal(err)
-	//}
-	//log.Printf("changeArea:")
-	//utils.JsonPutLine(res)
 }
