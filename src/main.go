@@ -3,8 +3,6 @@ package main
 import (
 	"context"
 	"github.com/vmware/govmomi/find"
-	"github.com/vmware/govmomi/property"
-	"github.com/vmware/govmomi/vim25/mo"
 	"log"
 	"vdemo/src/utils"
 	"vdemo/src/vmwareagent"
@@ -25,22 +23,19 @@ func main() {
 		log.Fatal("search vm error")
 	}
 
-	VmInfo := vmwareagent.GetVMInfo(ctx, mingweiVm)
+	//VmInfo := vmwareagent.GetVMInfo(ctx, mingweiVm)
+	//
+	//log.Printf("vmInfo:")
+	//utils.JsonPutLine(VmInfo)
 
-	log.Printf("vmInfo:")
-	utils.JsonPutLine(VmInfo)
-
-	hs, err := mingweiVm.HostSystem(ctx)
-	if err != nil {
-		log.Fatal(err)
+	vnics, vnets, vdss := vmwareagent.GetVmwareVmNetworkInfo(ctx,c,mingweiVm)
+	for _,v:=range vnics {
+		utils.JsonPutLine(v)
 	}
-	netsys, err := hs.ConfigManager().NetworkSystem(ctx)
-	if err != nil {
-		log.Fatal(err)
+	for _,v:=range vnets {
+		utils.JsonPutLine(v)
 	}
-	var mns mo.HostNetworkSystem
-	property.DefaultCollector(c).RetrieveOne(ctx, netsys.Reference(), nil, &mns)
-
-	utils.JsonPutLine(mns)
-
+	for _,v:=range vdss {
+		utils.JsonPutLine(v)
+	}
 }

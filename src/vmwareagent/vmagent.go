@@ -2,7 +2,6 @@ package vmwareagent
 
 import (
 	"context"
-	"fmt"
 	"github.com/vmware/govmomi/object"
 	"github.com/vmware/govmomi/property"
 	"github.com/vmware/govmomi/vim25"
@@ -33,7 +32,7 @@ type VMwareDisk struct {
 
 type VMwareNic struct {
 	MacAddress           string
-	Ovs                  string
+	Name                 string
 	VlanUuid             string
 	Vlans                []string
 }
@@ -52,7 +51,6 @@ type VMwareNet struct {
 type VMwareSwitch struct {
 	UUID      string
 	Name      string
-	OvsbrName string
 }
 
 // connect vsphere with an auth client
@@ -136,6 +134,8 @@ func GetVmwareVmDiskInfo(vm mo.VirtualMachine) map[int32]*VMwareDisk {
 
 func GetVmwareVmNetworkInfo(ctx context.Context, c *vim25.Client, vm *object.VirtualMachine) (map[int32]*VMwareNic, map[int32]*VMwareNet, map[int32]*VMwareSwitch) {
 	vmInfo := GetVMInfo(ctx, vm)
+	hostnetwork := GetHostSystemNetWork(ctx, c, vm)
+
 	vnics := make(map[int32]*VMwareNic)
 	vnets := make(map[int32]*VMwareNet)
 	vdss := make(map[int32]*VMwareSwitch)
@@ -145,20 +145,49 @@ func GetVmwareVmNetworkInfo(ctx context.Context, c *vim25.Client, vm *object.Vir
 			var vnic VMwareNic
 			var vnet VMwareNet
 			var vds VMwareSwitch
+			switch netDevice := device.(type) {
+			case *types.VirtualE1000:
+				vnic.MacAddress = netDevice.MacAddress
+				vnic.Name = netDevice.DeviceInfo.GetDescription().Label
+				backing := netDevice.Backing.(*types.VirtualEthernetCardNetworkBackingInfo)
+				vnet.Name = backing.DeviceName
+			case *types.VirtualE1000e:
+				vnic.MacAddress = netDevice.MacAddress
+				vnic.Name = netDevice.DeviceInfo.GetDescription().Label
+				backing := netDevice.Backing.(*types.VirtualEthernetCardNetworkBackingInfo)
+				vnet.Name = backing.DeviceName
+			case *types.VirtualVmxnet2:
+				vnic.MacAddress = netDevice.MacAddress
+				vnic.Name = netDevice.DeviceInfo.GetDescription().Label
+				backing := netDevice.Backing.(*types.VirtualEthernetCardNetworkBackingInfo)
+				vnet.Name = backing.DeviceName
+			case *types.VirtualVmxnet3:
+				vnic.MacAddress = netDevice.MacAddress
+				vnic.Name = netDevice.DeviceInfo.GetDescription().Label
+				backing := netDevice.Backing.(*types.VirtualEthernetCardNetworkBackingInfo)
+				vnet.Name = backing.DeviceName
+			case *types.VirtualPCNet32:
+				vnic.MacAddress = netDevice.MacAddress
+				vnic.Name = netDevice.DeviceInfo.GetDescription().Label
+				backing := netDevice.Backing.(*types.VirtualEthernetCardNetworkBackingInfo)
+				vnet.Name = backing.DeviceName
+			case *types.VirtualSriovEthernetCard:
+				vnic.MacAddress = netDevice.MacAddress
+				vnic.Name = netDevice.DeviceInfo.GetDescription().Label
+				backing := netDevice.Backing.(*types.VirtualEthernetCardNetworkBackingInfo)
+				vnet.Name = backing.DeviceName
+			default:
+			}
 
-			netDevice := device.(*types.VirtualEthernetCard)
-
-			vnic.MacAddress = netDevice.MacAddress
-			vnet.Name = netDevice.DeviceInfo.GetDescription().Label
-			vnet.UUID = string(key)
-			hostnetwork := GetHostSystemNetWork(ctx, c, vm)
 			var vswitch types.HostVirtualSwitch
 			var vswitchName string
-			for _, pg := range hostnetwork.NetworkInfo.Portgroup {
-				if pg.Key == "key-vim.host.PortGroup-"+vnet.Name {
-					vnet.VlanID = uint32(pg.Spec.VlanId)
-					vnic.VlanUuid = string(pg.Spec.VlanId)
-					vswitchName = pg.Vswitch
+			portgroups := hostnetwork.NetworkInfo.Portgroup
+			for _, portgroup := range portgroups {
+				if portgroup.Key == "key-vim.host.PortGroup-"+vnet.Name {
+					vnet.VlanID = uint32(portgroup.Spec.VlanId)
+					vnet.UUID = portgroup.Key
+					vnic.VlanUuid = portgroup.Key
+					vswitchName = portgroup.Vswitch
 					break
 				}
 			}
@@ -305,7 +334,6 @@ func ipv6Split(key string,temp *string){
 	for i:=0;i<len(key);i++{
 		if (i+1)%4==0 && i != len(key)-1{
 			*temp = *temp+key[:i+1]+":"
-			fmt.Println(len(*temp)-1)
 			key = key[i+1:]
 			ipv6Split(key,temp)
 			break
