@@ -30,11 +30,15 @@ type VMwareDisk struct {
 	OutOfProtect bool
 }
 
+type VMwareVlan struct {
+	VlanId uint32
+}
+
 type VMwareNic struct {
 	MacAddress           string
 	Name                 string
 	VlanUuid             string
-	Vlans                []string
+	Vlans                []*VMwareVlan
 }
 
 type VMwareNet struct {
@@ -186,6 +190,12 @@ func GetVmwareVmNetworkInfo(ctx context.Context, c *vim25.Client, vm *object.Vir
 				if portgroup.Key == "key-vim.host.PortGroup-"+vnet.Name {
 					vnet.VlanID = uint32(portgroup.Spec.VlanId)
 					vnet.UUID = portgroup.Key
+
+					vlans := make([]*VMwareVlan,0)
+					var vlan VMwareVlan
+					vlan.VlanId = uint32(portgroup.Spec.VlanId)
+					vlans = append(vlans, &vlan)
+					vnic.Vlans = vlans
 					vnic.VlanUuid = portgroup.Key
 					vswitchName = portgroup.Vswitch
 					break
