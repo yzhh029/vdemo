@@ -21,6 +21,33 @@ const CONFIG_USERNAME = "vsphere.local\\administrator"
 const CONFIG_PASSWORD = "!QAZ2wsx"
 const CONFIG_SSLFLAG = true
 
+
+type Disk struct {
+	UUID              string
+	Name              string
+	Description       string
+	Path              string
+	SizeInByte        uint64
+	Status            string
+	ResourceState     string
+	Type              string
+	SuperType         string
+	StoragePolicyUUID string
+	Sharing           bool
+	CloneBeforeCreate bool
+	SnapshotCount     uint32
+	VolumeUUID        string
+	FromExportName    string
+	SrcExportID       string
+	SrcInodeID        string
+	SrcLunID          uint32
+	LunID             uint32
+	TargetName        string
+	SrcTargetName     string
+	Mounting          bool
+	ZbsVolumeUUID     string
+}
+
 type VMwareDisk struct {
 	Uuid         string
 	Name         string
@@ -55,6 +82,7 @@ type VMwareNet struct {
 type VMwareSwitch struct {
 	UUID      string
 	Name      string
+	OvsbrName string
 }
 
 // connect vsphere with an auth client
@@ -105,35 +133,54 @@ func GetVMInfo(ctx context.Context, vm *object.VirtualMachine) mo.VirtualMachine
 }
 
 // get vm disk info from vminfo
-func GetVmwareVmDiskInfo(vm mo.VirtualMachine) map[int32]*VMwareDisk {
-	disks := make(map[int32]*VMwareDisk)
+func GetVmwareVmDiskInfo(vm mo.VirtualMachine) (map[int32]*VMwareDisk, map[int32]*Disk){
+	vmdisks := make(map[int32]*VMwareDisk)
+	disks := make(map[int32]*Disk)
 	for _, device := range vm.Config.Hardware.Device {
 		key := device.GetVirtualDevice().Key
 		if key >= 2000 && key < 3000 {
-			diskDevice := device.GetVirtualDevice()
-			var disk VMwareDisk
+			diskDevice := device.(*types.VirtualDisk)
+			var vmdisk VMwareDisk
+			var disk Disk
+			vmdisk.Name = diskDevice.DeviceInfo.GetDescription().Label
 			disk.Name = diskDevice.DeviceInfo.GetDescription().Label
-			disk.Duplicated = false
-			disk.OutOfProtect = false
+			disk.SizeInByte = uint64(diskDevice.CapacityInBytes)
+			disk.Status = "created"
+			disk.ResourceState = "in-use"
+			disk.Type = "KVM_VOLUME_ISCSI"
+			disk.SuperType = "KVM_VOLUME_SUPER"
+			disk.Mounting = true
 			switch backing := diskDevice.Backing.(type) {
 			case *types.VirtualDiskFlatVer2BackingInfo:
+				vmdisk.Path = backing.FileName
+				vmdisk.Uuid = backing.Uuid
 				disk.Path = backing.FileName
-				disk.Uuid = backing.Uuid
+				disk.UUID = backing.Uuid
+				if backing.Sharing != "sharingNone" {
+					disk.Sharing = true
+				}
 			case *types.VirtualDiskSparseVer2BackingInfo:
-				disk.Path = backing.FileName
-				disk.Uuid = backing.Uuid
+				vmdisk.Path = backing.FileName
+				vmdisk.Uuid = backing.Uuid
 			case *types.VirtualDiskRawDiskMappingVer1BackingInfo:
-				disk.Path = backing.FileName
-				disk.Uuid = backing.Uuid
+				vmdisk.Path = backing.FileName
+				vmdisk.Uuid = backing.Uuid
+				if backing.Sharing != "sharingNone" {
+					disk.Sharing = true
+				}
 			case *types.VirtualDiskRawDiskVer2BackingInfo:
-				disk.Path = backing.DescriptorFileName
-				disk.Uuid = backing.Uuid
+				vmdisk.Path = backing.DescriptorFileName
+				vmdisk.Uuid = backing.Uuid
+				if backing.Sharing != "sharingNone" {
+					disk.Sharing = true
+				}
 			default:
 			}
+			vmdisks[key] = &vmdisk
 			disks[key] = &disk
 		}
 	}
-	return disks
+	return vmdisks, disks
 }
 
 func GetVmwareVmNetworkInfo(ctx context.Context, c *vim25.Client, vm *object.VirtualMachine) (map[int32]*VMwareNic, map[int32]*VMwareNet, map[int32]*VMwareSwitch) {
@@ -206,11 +253,14 @@ func GetVmwareVmNetworkInfo(ctx context.Context, c *vim25.Client, vm *object.Vir
 					vswitch = vs
 					vds.UUID = vs.Key
 					vds.Name = vs.Name
+					vds.OvsbrName = vs.Name
 					break
 				}
 			}
 			vnet.Gateway = hostnetwork.IpRouteConfig.(*types.HostIpRouteConfig).DefaultGateway
 			vnet.VdsUUID = vswitch.Key
+			vnet.InternalVlanID = vnet.VlanID
+			vnet.Type = 3
 
 			nets := vmInfo.Guest.Net
 			for _, net := range nets {

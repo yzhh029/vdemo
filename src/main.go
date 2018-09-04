@@ -23,19 +23,24 @@ func main() {
 		log.Fatal("search vm error")
 	}
 
-	//VmInfo := vmwareagent.GetVMInfo(ctx, mingweiVm)
+	VmInfo := vmwareagent.GetVMInfo(ctx, mingweiVm)
 	//
 	//log.Printf("vmInfo:")
-	//utils.JsonPutLine(VmInfo)
+	utils.JsonPutLine(VmInfo)
 
-	vnics, vnets, vdss := vmwareagent.GetVmwareVmNetworkInfo(ctx,c,mingweiVm)
-	for _,v:=range vnics {
-		utils.JsonPutLine(v)
-	}
-	for _,v:=range vnets {
-		utils.JsonPutLine(v)
-	}
-	for _,v:=range vdss {
+	//vnics, vnets, vdss := vmwareagent.GetVmwareVmNetworkInfo(ctx,c,mingweiVm)
+	//for _,v:=range vnics {
+	//	utils.JsonPutLine(v)
+	//}
+	//for _,v:=range vnets {
+	//	utils.JsonPutLine(v)
+	//}
+	//for _,v:=range vdss {
+	//	utils.JsonPutLine(v)
+	//}
+
+	_, disks := vmwareagent.GetVmwareVmDiskInfo(VmInfo)
+	for _, v := range disks {
 		utils.JsonPutLine(v)
 	}
 }

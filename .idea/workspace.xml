@@ -3,6 +3,7 @@
   <component name="ChangeListManager">
     <list default="true" id="1eaf1a57-0963-4cbe-b28b-18ce95c33fad" name="Default Changelist" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main.go" beforeDir="false" afterPath="$PROJECT_DIR$/src/main.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/vmwareagent/vmagent.go" beforeDir="false" afterPath="$PROJECT_DIR$/src/vmwareagent/vmagent.go" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
@@ -26,25 +27,25 @@
       </usages-collector>
       <usages-collector id="statistics.file.extensions.open">
         <counts>
-          <entry key="go" value="34" />
+          <entry key="go" value="36" />
           <entry key="txt" value="3" />
         </counts>
       </usages-collector>
       <usages-collector id="statistics.file.types.open">
         <counts>
-          <entry key="Go" value="34" />
+          <entry key="Go" value="36" />
           <entry key="PLAIN_TEXT" value="3" />
         </counts>
       </usages-collector>
       <usages-collector id="statistics.file.extensions.edit">
         <counts>
-          <entry key="go" value="7302" />
+          <entry key="go" value="7696" />
           <entry key="txt" value="4" />
         </counts>
       </usages-collector>
       <usages-collector id="statistics.file.types.edit">
         <counts>
-          <entry key="Go" value="7302" />
+          <entry key="Go" value="7696" />
           <entry key="PLAIN_TEXT" value="4" />
         </counts>
       </usages-collector>
@@ -61,32 +62,11 @@
       <file pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/src/vmwareagent/vmagent.go">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="81">
-              <caret line="194" column="39" lean-forward="true" selection-start-line="194" selection-start-column="39" selection-end-line="194" selection-end-column="39" />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/../github.com/vmware/govmomi/vim25/types/types.go">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="46">
-              <caret line="48788" column="5" selection-start-line="48788" selection-start-column="5" selection-end-line="48788" selection-end-column="5" />
+            <state relative-caret-position="222">
+              <caret line="307" column="1" lean-forward="true" selection-start-line="307" selection-start-column="1" selection-end-line="307" selection-end-column="1" />
               <folding>
-                <element signature="e#392687#392773#0" />
-                <element signature="e#412040#412121#0" />
-                <element signature="e#1473653#1473830#0" />
-                <element signature="e#1473974#1474751#0" />
+                <element signature="e#21#375#0" expanded="true" />
               </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/../github.com/vmware/govmomi/vim25/types/if.go">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="122">
-              <caret line="2709" column="30" selection-start-line="2709" selection-start-column="30" selection-end-line="2709" selection-end-column="30" />
             </state>
           </provider>
         </entry>
@@ -94,8 +74,8 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/src/main.go">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="144">
-              <caret line="14" lean-forward="true" selection-start-line="14" selection-end-line="14" />
+            <state relative-caret-position="318">
+              <caret line="39" column="7" lean-forward="true" selection-start-line="39" selection-start-column="7" selection-end-line="39" selection-end-column="7" />
             </state>
           </provider>
         </entry>
@@ -145,10 +125,10 @@
     <sorting>DEFINITION_ORDER</sorting>
   </component>
   <component name="ProjectFrameBounds" extendedState="6">
-    <option name="x" value="-12" />
-    <option name="y" value="-12" />
-    <option name="width" value="1851" />
-    <option name="height" value="1104" />
+    <option name="x" value="-11" />
+    <option name="y" value="-11" />
+    <option name="width" value="1850" />
+    <option name="height" value="1103" />
   </component>
   <component name="ProjectLevelVcsManager" settingsEditedManually="true" />
   <component name="ProjectView">
@@ -256,14 +236,14 @@
       <window_info id="Favorites" order="2" side_tool="true" />
       <window_info anchor="bottom" id="Message" order="0" />
       <window_info anchor="bottom" id="Find" order="1" />
-      <window_info active="true" anchor="bottom" id="Run" order="2" visible="true" weight="0.4053156" />
-      <window_info anchor="bottom" id="Debug" order="3" weight="0.41694352" />
+      <window_info anchor="bottom" id="Run" order="2" weight="0.4435216" />
+      <window_info anchor="bottom" id="Debug" order="3" weight="0.41680863" />
       <window_info anchor="bottom" id="Cvs" order="4" weight="0.25" />
       <window_info anchor="bottom" id="Inspection" order="5" weight="0.4" />
       <window_info anchor="bottom" id="TODO" order="6" />
       <window_info anchor="bottom" id="Database Changes" order="7" show_stripe_button="false" />
       <window_info anchor="bottom" id="Version Control" order="8" weight="0.4501661" />
-      <window_info anchor="bottom" id="Terminal" order="9" weight="0.32392028" />
+      <window_info anchor="bottom" id="Terminal" order="9" weight="0.2591362" />
       <window_info anchor="bottom" id="Event Log" order="10" side_tool="true" />
       <window_info anchor="right" id="Commander" internal_type="SLIDING" order="0" type="SLIDING" weight="0.4" />
       <window_info anchor="right" id="Ant Build" order="1" weight="0.25" />
@@ -291,14 +271,20 @@
         </line-breakpoint>
         <line-breakpoint enabled="true" type="DlvLineBreakpoint">
           <url>file://$PROJECT_DIR$/src/vmwareagent/vmagent.go</url>
-          <line>148</line>
+          <line>195</line>
           <option name="timeStamp" value="6" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="DlvLineBreakpoint">
           <url>file://$PROJECT_DIR$/src/vmwareagent/vmagent.go</url>
-          <line>187</line>
+          <line>234</line>
           <properties />
           <option name="timeStamp" value="7" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="DlvLineBreakpoint">
+          <url>file://$PROJECT_DIR$/src/vmwareagent/vmagent.go</url>
+          <line>265</line>
+          <properties />
+          <option name="timeStamp" value="8" />
         </line-breakpoint>
       </breakpoints>
     </breakpoint-manager>
@@ -349,13 +335,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/../github.com/vmware/govmomi/vim25/methods/methods.go">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="146">
-          <caret line="8693" column="122" selection-start-line="8693" selection-start-column="122" selection-end-line="8693" selection-end-column="122" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/../github.com/vmware/govmomi/find/finder.go">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="162">
@@ -388,13 +367,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="181">
           <caret line="1118" column="29" selection-start-line="1118" selection-start-column="19" selection-end-line="1118" selection-end-column="29" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/../github.com/vmware/govmomi/object/virtual_machine.go">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="22">
-          <caret line="539" column="24" selection-start-line="539" selection-start-column="24" selection-end-line="539" selection-end-column="24" />
         </state>
       </provider>
     </entry>
@@ -454,17 +426,34 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/../github.com/vmware/govmomi/object/virtual_machine.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="91">
+          <caret line="555" column="19" lean-forward="true" selection-start-line="555" selection-start-column="19" selection-end-line="555" selection-end-column="19" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/../github.com/vmware/govmomi/vim25/methods/methods.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="1082">
+          <caret line="8745" column="46" lean-forward="true" selection-start-line="8745" selection-start-column="46" selection-end-line="8745" selection-end-column="46" />
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/src/main.go">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="144">
-          <caret line="14" lean-forward="true" selection-start-line="14" selection-end-line="14" />
+        <state relative-caret-position="318">
+          <caret line="39" column="7" lean-forward="true" selection-start-line="39" selection-start-column="7" selection-end-line="39" selection-end-column="7" />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/src/vmwareagent/vmagent.go">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="81">
-          <caret line="194" column="39" lean-forward="true" selection-start-line="194" selection-start-column="39" selection-end-line="194" selection-end-column="39" />
+        <state relative-caret-position="222">
+          <caret line="307" column="1" lean-forward="true" selection-start-line="307" selection-start-column="1" selection-end-line="307" selection-end-column="1" />
+          <folding>
+            <element signature="e#21#375#0" expanded="true" />
+          </folding>
         </state>
       </provider>
     </entry>
